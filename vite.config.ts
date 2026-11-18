@@ -1,8 +1,11 @@
+
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
+
+const rootDir = import.meta.dirname;
 
 const sitemapPaths = [
   '/',
@@ -21,6 +24,7 @@ export default defineConfig(({ mode }) => {
   const indexingRequested = env.VITE_INDEXING_ENABLED === 'true';
 
   let isValidHttpsSiteUrl = false;
+
   try {
     isValidHttpsSiteUrl = new URL(siteUrl).protocol === 'https:';
   } catch {
@@ -43,7 +47,10 @@ export default defineConfig(({ mode }) => {
     );
   }
 
-  if (indexingRequested && (!phoneDisplay || !/^tel:\+[1-9]\d{7,14}$/.test(phoneHref))) {
+  if (
+    indexingRequested &&
+    (!phoneDisplay || !/^tel:\+[1-9]\d{7,14}$/.test(phoneHref))
+  ) {
     throw new Error(
       'VITE_PHONE_DISPLAY and a valid E.164 VITE_PHONE_HREF are required before enabling indexing.',
     );
@@ -57,19 +64,25 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       {
         name: 'client-seo-output',
+
         transformIndexHtml(html: string) {
-          const robotsContent = indexingEnabled ? 'index,follow' : 'noindex,nofollow';
+          const robotsContent = indexingEnabled
+            ? 'index,follow'
+            : 'noindex,nofollow';
+
           return html.replace(
             /<meta name="robots" content="[^"]*"\s*\/?>/i,
             `<meta name="robots" content="${robotsContent}" />`,
           );
         },
+
         generateBundle(_options, bundle) {
           const robotsContent = indexingEnabled
             ? `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`
             : 'User-agent: *\nDisallow: /\n';
 
           const robotsAsset = bundle['robots.txt'];
+
           if (robotsAsset?.type === 'asset') {
             robotsAsset.source = robotsContent;
           } else {
@@ -81,8 +94,11 @@ export default defineConfig(({ mode }) => {
           }
 
           const sitemapAsset = bundle['sitemap.xml'];
+
           if (!indexingEnabled) {
-            if (sitemapAsset) delete bundle['sitemap.xml'];
+            if (sitemapAsset) {
+              delete bundle['sitemap.xml'];
+            }
             return;
           }
 
@@ -108,33 +124,41 @@ export default defineConfig(({ mode }) => {
           }
         },
       },
+
       // Copies src/assets into dist/ so root-relative URLs like
       // "/src/assets/images/..." continue to resolve in production builds.
       {
         name: 'copy-unbundled-src-assets',
         apply: 'build',
+
         closeBundle(error?: Error): void {
           if (error) return;
 
-          const distDir = path.resolve(__dirname, 'dist');
-          const srcAssets = path.resolve(__dirname, 'src/assets');
+          const distDir = path.resolve(rootDir, 'dist');
+          const srcAssets = path.resolve(rootDir, 'src/assets');
           const distAssets = path.resolve(distDir, 'src/assets');
 
           if (fs.existsSync(distDir) && fs.existsSync(srcAssets)) {
-            fs.cpSync(srcAssets, distAssets, { recursive: true, force: true });
+            fs.cpSync(srcAssets, distAssets, {
+              recursive: true,
+              force: true,
+            });
           }
         },
       },
     ],
+
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(rootDir, '.'),
       },
     },
+
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.
       hmr: process.env.DISABLE_HMR !== 'true',
+
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
