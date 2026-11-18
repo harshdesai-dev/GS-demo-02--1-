@@ -1,5 +1,5 @@
 import { MessageSquare, ArrowUpRight } from 'lucide-react';
-import { SITE_CONFIG, isLiveContactEnabled } from '../config/siteConfig';
+import { isWhatsAppContactEnabled } from '../config/siteConfig';
 import { buildQuickWhatsAppUrl } from '../lib/whatsapp';
 import { trackWhatsAppCtaClick } from '../lib/analytics';
 
@@ -18,9 +18,8 @@ export function WhatsAppCta({
   variant = 'primary',
   className = '',
 }: WhatsAppCtaProps) {
-  const enabled = isLiveContactEnabled();
+  const enabled = isWhatsAppContactEnabled();
   const href = enabled ? buildQuickWhatsAppUrl(topic) : undefined;
-
   const variantClasses =
     variant === 'primary'
       ? 'bg-[#C8F135] text-[#090A0C] hover:bg-[#D6F85D] active:bg-[#B8E124] border border-[#C8F135] font-semibold'
