@@ -1,0 +1,6 @@
+{
+  "name": "Forge Fitness",
+  "description": "Forge Fitness — Strength, conditioning, and coached training studio. Explore facilities, membership plans, trainers, weekly timetable, and WhatsApp enquiries.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
