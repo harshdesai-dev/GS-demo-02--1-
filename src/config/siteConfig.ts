@@ -39,8 +39,8 @@ export const SITE_CONFIG = {
     // Replace with client-confirmed WhatsApp number (international digits only, no '+' or spaces)
     whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || '919800000000',
     // Replace with client-confirmed display phone and tel: href
-    phoneDisplay: '+91 98000 00000',
-    phoneHref: 'tel:+919800000000',
+    phoneDisplay: import.meta.env.VITE_PHONE_DISPLAY || '+91 98000 00000',
+    phoneHref: import.meta.env.VITE_PHONE_HREF || 'tel:+919800000000',
     emailDisplay: 'hello@forgefitness.example',
     addressLines: [
       'Sample Location: 42 Indiranagar 100 Ft Road',
