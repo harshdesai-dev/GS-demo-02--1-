@@ -33,6 +33,22 @@ export default defineConfig(({ mode }) => {
     );
   }
 
+  const whatsappNumber = (env.VITE_WHATSAPP_NUMBER || '').replace(/\D/g, '');
+  const phoneDisplay = (env.VITE_PHONE_DISPLAY || '').trim();
+  const phoneHref = (env.VITE_PHONE_HREF || '').trim();
+
+  if (indexingRequested && !/^\d{10,15}$/.test(whatsappNumber)) {
+    throw new Error(
+      'A confirmed VITE_WHATSAPP_NUMBER (10 to 15 digits, including country code) is required before enabling indexing.',
+    );
+  }
+
+  if (indexingRequested && (!phoneDisplay || !/^tel:\+[1-9]\d{7,14}$/.test(phoneHref))) {
+    throw new Error(
+      'VITE_PHONE_DISPLAY and a valid E.164 VITE_PHONE_HREF are required before enabling indexing.',
+    );
+  }
+
   const indexingEnabled = indexingRequested && isValidHttpsSiteUrl;
 
   return {
