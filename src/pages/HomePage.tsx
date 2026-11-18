@@ -397,7 +397,7 @@ export function HomePage() {
                 onClick={(event) => {
                   if (!phoneEnabled) { event.preventDefault(); return; }
                   trackPhoneCtaClick('home_bottom_cta');
-                }
+                }}
                 className="inline-flex min-h-[44px] items-center justify-center gap-2 border border-white/20 px-4 py-2.5 text-sm font-medium text-[#F4F5F7] hover:bg-white/5 transition-colors whitespace-nowrap"
               >
                 <Phone className="h-4 w-4 text-[#C8F135]" aria-hidden="true" />
