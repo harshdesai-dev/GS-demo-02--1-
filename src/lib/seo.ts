@@ -8,7 +8,12 @@ interface PageSeoOptions {
   path: string;
 }
 
-function setMetaTag(selector: string, attribute: 'name' | 'property', key: string, content: string): void {
+function setMetaTag(
+  selector: string,
+  attribute: 'name' | 'property',
+  key: string,
+  content: string,
+): void {
   let tag = document.querySelector<HTMLMetaElement>(selector);
   if (!tag) {
     tag = document.createElement('meta');
@@ -32,14 +37,23 @@ export function usePageSeo({ title, description, path }: PageSeoOptions): void {
     setMetaTag('meta[name="twitter:title"]', 'name', 'twitter:title', fullTitle);
     setMetaTag('meta[name="twitter:description"]', 'name', 'twitter:description', description);
 
-    const canonicalUrl = `${window.location.origin}${path}`;
+    const configuredSiteUrl = SITE_CONFIG.siteUrl.trim().replace(/\/+$/, '');
+    const canonicalUrl = configuredSiteUrl
+      ? `${configuredSiteUrl}${path.startsWith('/') ? path : `/${path}`}`
+      : '';
+
     let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonical);
+
+    if (canonicalUrl) {
+      if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonical);
+      }
+      canonical.setAttribute('href', canonicalUrl);
+    } else {
+      canonical?.remove();
     }
-    canonical.setAttribute('href', canonicalUrl);
 
     trackPageView(path, fullTitle);
   }, [title, description, path]);
