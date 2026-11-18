@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router-dom';
 import { MapPin, Phone, Clock, MessageSquare, ArrowUpRight } from 'lucide-react';
-import { SITE_CONFIG } from '../config/siteConfig';
+import { SITE_CONFIG, isPhoneContactEnabled } from '../config/siteConfig';
 import { usePageSeo } from '../lib/seo';
 import { trackPhoneCtaClick } from '../lib/analytics';
 import { ContentSection } from '../components/ContentSection';
@@ -16,6 +16,7 @@ export function ContactPage() {
     path: '/contact',
   });
 
+  const phoneEnabled = isPhoneContactEnabled();
   const [searchParams] = useSearchParams();
   const preselectedPlan = searchParams.get('plan') || '';
 
@@ -81,11 +82,15 @@ export function ContactPage() {
                   <div className="space-y-1">
                     <p className="font-semibold text-[#F4F5F7]">Phone (Click-to-Call)</p>
                     <a
-                      href={SITE_CONFIG.contact.phoneHref}
-                      onClick={() => trackPhoneCtaClick('contact_details')}
+                      href={phoneEnabled ? SITE_CONFIG.contact.phoneHref : undefined}
+                      aria-disabled={!phoneEnabled}
+                      onClick={(event) => {
+                        if (!phoneEnabled) { event.preventDefault(); return; }
+                        trackPhoneCtaClick('contact_details');
+                      }
                       className="inline-block font-mono text-base font-medium text-[#F4F5F7] hover:text-[#C8F135] tabular-nums"
                     >
-                      {SITE_CONFIG.contact.phoneDisplay}
+                      {phoneEnabled ? SITE_CONFIG.contact.phoneDisplay : 'Phone details pending client approval'}
                     </a>
                   </div>
                 </div>
@@ -99,7 +104,7 @@ export function ContactPage() {
                   <div className="space-y-1">
                     <p className="font-semibold text-[#F4F5F7]">WhatsApp Desk</p>
                     <p className="font-mono text-sm text-[#A1A7B3] tabular-nums">
-                      +{SITE_CONFIG.contact.whatsappNumber}
+                      {SITE_CONFIG.contact.whatsappNumber ? `+${SITE_CONFIG.contact.whatsappNumber}` : 'WhatsApp details pending client approval'}
                     </p>
                     <div className="pt-1">
                       <WhatsAppCta
@@ -136,7 +141,8 @@ export function ContactPage() {
                   {SITE_CONFIG.socialLinks.map((social) => (
                     <a
                       key={social.platform}
-                      href={social.url}
+                      href={social.isPlaceholder ? undefined : social.url}
+                      aria-disabled={social.isPlaceholder}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex min-h-[40px] items-center gap-1.5 border border-white/15 bg-[#121418] px-3.5 py-2 text-xs font-medium text-[#F4F5F7] hover:border-[#C8F135]/60 transition-colors"
