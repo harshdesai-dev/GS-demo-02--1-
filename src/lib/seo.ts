@@ -25,21 +25,25 @@ export function usePageSeo({ title, description, path }: PageSeoOptions): void {
       : `${title} – ${SITE_CONFIG.brand.name}`;
 
     document.title = fullTitle;
-
     setMetaTag('meta[name="description"]', 'name', 'description', description);
     setMetaTag('meta[property="og:title"]', 'property', 'og:title', fullTitle);
     setMetaTag('meta[property="og:description"]', 'property', 'og:description', description);
     setMetaTag('meta[name="twitter:title"]', 'name', 'twitter:title', fullTitle);
     setMetaTag('meta[name="twitter:description"]', 'name', 'twitter:description', description);
 
-    const canonicalUrl = `${window.location.origin}${path}`;
+    const configuredSiteUrl = import.meta.env.VITE_SITE_URL?.trim().replace(/\/$/, '');
     let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement('link');
-      canonical.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonical);
+    if (configuredSiteUrl) {
+      if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonical);
+      }
+      canonical.setAttribute('href', `${configuredSiteUrl}${path}`);
+      setMetaTag('meta[property="og:url"]', 'property', 'og:url', `${configuredSiteUrl}${path}`);
+    } else {
+      canonical?.remove();
     }
-    canonical.setAttribute('href', canonicalUrl);
 
     trackPageView(path, fullTitle);
   }, [title, description, path]);
