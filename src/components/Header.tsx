@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu, X, Phone } from 'lucide-react';
-import { SITE_CONFIG } from '../config/siteConfig';
+import { SITE_CONFIG, isPhoneContactEnabled } from '../config/siteConfig';
 import { ActionLink } from './ActionButton';
 import { WhatsAppCta } from './WhatsAppCta';
 import { trackPhoneCtaClick } from '../lib/analytics';
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const phoneEnabled = isPhoneContactEnabled();
   const { pathname } = useLocation();
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -173,12 +174,16 @@ export function Header() {
                 className="w-full"
               />
               <a
-                href={SITE_CONFIG.contact.phoneHref}
-                onClick={() => trackPhoneCtaClick('mobile_drawer')}
+                href={phoneEnabled ? SITE_CONFIG.contact.phoneHref : undefined}
+                aria-disabled={!phoneEnabled}
+                onClick={(event) => {
+                  if (!phoneEnabled) { event.preventDefault(); return; }
+                  trackPhoneCtaClick('mobile_drawer');
+                }
                 className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 border border-white/20 px-4 py-2.5 text-sm font-medium text-[#F4F5F7] hover:bg-white/5 transition-colors"
               >
                 <Phone className="h-4 w-4 text-[#C8F135]" aria-hidden="true" />
-                <span>Call {SITE_CONFIG.contact.phoneDisplay}</span>
+                <span>{phoneEnabled ? `Call ${SITE_CONFIG.contact.phoneDisplay}` : 'Phone details pending'}</span>
               </a>
             </div>
           </div>
