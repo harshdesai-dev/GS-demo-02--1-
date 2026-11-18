@@ -8,10 +8,8 @@ declare global {
 }
 
 export type AnalyticsConsentDecision = 'unset' | 'granted' | 'denied';
-
 const CONSENT_STORAGE_KEY = 'forge_fitness_analytics_consent';
 let isInitialized = false;
-let consentGranted = false;
 
 export function getAnalyticsConsentDecision(): AnalyticsConsentDecision {
   if (typeof window === 'undefined') return 'unset';
@@ -22,6 +20,8 @@ export function getAnalyticsConsentDecision(): AnalyticsConsentDecision {
     return 'unset';
   }
 }
+
+let consentGranted = getAnalyticsConsentDecision() === 'granted';
 
 export function isGa4Configured(): boolean {
   const id = SITE_CONFIG.analytics.ga4MeasurementId.trim();
@@ -55,12 +55,8 @@ export function setAnalyticsConsent(decision: Exclude<AnalyticsConsentDecision, 
       // Consent still applies for this page session when storage is unavailable.
     }
   }
-
-  if (decision === 'granted') {
-    initializeGa4();
-  } else {
-    updateGoogleConsent(false);
-  }
+  if (decision === 'granted') initializeGa4();
+  else updateGoogleConsent(false);
 }
 
 export function grantAnalyticsConsent(): void {
@@ -81,8 +77,6 @@ export function initializeGa4(): void {
 
   const measurementId = SITE_CONFIG.analytics.ga4MeasurementId.trim();
   ensureGtag();
-
-  // Consent defaults are set before the Google tag script is requested.
   window.gtag?.('consent', 'default', {
     analytics_storage: 'denied',
     ad_storage: 'denied',
@@ -91,10 +85,7 @@ export function initializeGa4(): void {
   });
   updateGoogleConsent(true);
   window.gtag?.('js', new Date());
-  window.gtag?.('config', measurementId, {
-    send_page_view: false,
-    anonymize_ip: true,
-  });
+  window.gtag?.('config', measurementId, { send_page_view: false, anonymize_ip: true });
 
   const existingScript = document.querySelector(`script[data-ga4-id="${measurementId}"]`);
   if (!existingScript) {
@@ -104,7 +95,6 @@ export function initializeGa4(): void {
     script.setAttribute('data-ga4-id', measurementId);
     document.head.appendChild(script);
   }
-
   isInitialized = true;
 }
 
@@ -118,22 +108,15 @@ function trackEvent(eventName: string, params: Record<string, string | number | 
 export function trackPageView(path: string, title: string): void {
   trackEvent('page_view', { page_path: path, page_title: title });
 }
-
 export function trackWhatsAppCtaClick(source: string): void {
   trackEvent('whatsapp_cta_click', { cta_location: source });
 }
-
 export function trackPhoneCtaClick(source: string): void {
   trackEvent('phone_cta_click', { cta_location: source });
 }
-
 export function trackFormValidationError(fieldNames: string[]): void {
-  trackEvent('form_validation_error', {
-    invalid_fields: fieldNames.join(','),
-    error_count: fieldNames.length,
-  });
+  trackEvent('form_validation_error', { invalid_fields: fieldNames.join(','), error_count: fieldNames.length });
 }
-
 export function trackWhatsAppHandoffInitiated(interestCategory: string): void {
   // Tracks only the selected non-PII category, never customer-entered form values.
   trackEvent('whatsapp_handoff_initiated', { interest_category: interestCategory });
