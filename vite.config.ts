@@ -50,8 +50,8 @@ export default defineConfig(({ mode }) => {
         },
         generateBundle(_options, bundle) {
           const robotsContent = indexingEnabled
-            ? `User-agent: *\\nAllow: /\\n\\nSitemap: ${siteUrl}/sitemap.xml\\n`
-            : 'User-agent: *\\nDisallow: /\\n';
+            ? `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`
+            : 'User-agent: *\nDisallow: /\n';
 
           const robotsAsset = bundle['robots.txt'];
           if (robotsAsset?.type === 'asset') {
@@ -79,7 +79,7 @@ export default defineConfig(({ mode }) => {
             ),
             '</urlset>',
             '',
-          ].join('\\n');
+          ].join('\n');
 
           if (sitemapAsset?.type === 'asset') {
             sitemapAsset.source = sitemapXml;
