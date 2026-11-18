@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import type { GalleryPhoto } from '../data/gymContent';
 import { MediaFrame } from './MediaFrame';
@@ -21,39 +21,65 @@ const CATEGORIES: GalleryFilter[] = [
 export function GalleryGrid({ photos, showFilters = true }: GalleryGridProps) {
   const [activeCategory, setActiveCategory] = useState<GalleryFilter>('All');
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const lightboxRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const filteredPhotos =
     activeCategory === 'All'
       ? photos
       : photos.filter((photo) => photo.category === activeCategory);
+  const isLightboxOpen = activeIndex !== null;
 
   useEffect(() => {
-    if (activeIndex === null) return;
+    if (!isLightboxOpen) return;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    document.body.style.overflow = 'hidden';
+    closeButtonRef.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setActiveIndex(null);
       } else if (event.key === 'ArrowRight') {
-        setActiveIndex((prev) =>
-          prev === null ? null : (prev + 1) % filteredPhotos.length
+        setActiveIndex((current) =>
+          current === null ? null : (current + 1) % filteredPhotos.length,
         );
       } else if (event.key === 'ArrowLeft') {
-        setActiveIndex((prev) =>
-          prev === null
+        setActiveIndex((current) =>
+          current === null
             ? null
-            : (prev - 1 + filteredPhotos.length) % filteredPhotos.length
+            : (current - 1 + filteredPhotos.length) % filteredPhotos.length,
         );
+      } else if (event.key === 'Tab') {
+        const focusableElements = lightboxRef.current?.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+        );
+        if (!focusableElements?.length) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (event.shiftKey && document.activeElement === firstElement) {
+          event.preventDefault();
+          lastElement.focus();
+        } else if (!event.shiftKey && document.activeElement === lastElement) {
+          event.preventDefault();
+          firstElement.focus();
+        }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
+      document.body.style.overflow = previousBodyOverflow;
+      previouslyFocused?.focus();
     };
-  }, [activeIndex, filteredPhotos.length]);
+  }, [isLightboxOpen, filteredPhotos.length]);
 
   const activePhoto = activeIndex !== null ? filteredPhotos[activeIndex] : null;
 
@@ -61,7 +87,7 @@ export function GalleryGrid({ photos, showFilters = true }: GalleryGridProps) {
     <div className="space-y-8">
       {showFilters ? (
         <div
-          role="tablist"
+          role="group"
           aria-label="Filter gallery photos by zone"
           className="flex flex-wrap gap-2"
         >
@@ -71,13 +97,12 @@ export function GalleryGrid({ photos, showFilters = true }: GalleryGridProps) {
               <button
                 key={category}
                 type="button"
-                role="tab"
-                aria-selected={isSelected}
+                aria-pressed={isSelected}
                 onClick={() => {
                   setActiveCategory(category);
                   setActiveIndex(null);
                 }}
-                className={`min-h-[40px] px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                className={`min-h-[40px] shrink-0 cursor-pointer whitespace-nowrap px-4 py-2 text-xs font-medium transition-colors sm:text-sm ${
                   isSelected
                     ? 'bg-[#C8F135] text-[#090A0C]'
                     : 'border border-white/15 bg-[#121418] text-[#A1A7B3] hover:border-white/30 hover:text-[#F4F5F7]'
@@ -100,7 +125,7 @@ export function GalleryGrid({ photos, showFilters = true }: GalleryGridProps) {
               type="button"
               onClick={() => setActiveIndex(index)}
               aria-label={`View larger image: ${photo.title}`}
-              className="block w-full overflow-hidden text-left cursor-pointer focus-visible:outline-2 focus-visible:outline-[#C8F135]"
+              className="block w-full cursor-pointer overflow-hidden text-left focus-visible:outline-2 focus-visible:outline-[#C8F135]"
             >
               <MediaFrame
                 src={photo.image}
@@ -126,6 +151,7 @@ export function GalleryGrid({ photos, showFilters = true }: GalleryGridProps) {
       {/* Lightweight Accessible Lightbox Modal */}
       {activePhoto && activeIndex !== null ? (
         <div
+          ref={lightboxRef}
           role="dialog"
           aria-modal="true"
           aria-label={activePhoto.title}
@@ -146,10 +172,11 @@ export function GalleryGrid({ photos, showFilters = true }: GalleryGridProps) {
                 </p>
               </div>
               <button
+                ref={closeButtonRef}
                 type="button"
                 onClick={() => setActiveIndex(null)}
                 aria-label="Close image viewer"
-                className="inline-flex h-10 w-10 items-center justify-center border border-white/15 bg-[#181B20] text-[#F4F5F7] hover:border-white/30 cursor-pointer"
+                className="inline-flex h-10 w-10 cursor-pointer items-center justify-center border border-white/15 bg-[#181B20] text-[#F4F5F7] hover:border-white/30"
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -161,34 +188,34 @@ export function GalleryGrid({ photos, showFilters = true }: GalleryGridProps) {
                 alt={activePhoto.alt}
                 aspectClass="aspect-[16/10]"
                 className="border-0"
-                imgClassName="object-contain bg-[#090A0C]"
+                imgClassName="bg-[#090A0C] object-contain"
                 priority
               />
             </div>
 
             <div className="flex flex-col gap-4 border-t border-white/10 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <p className="text-sm text-[#A1A7B3]">{activePhoto.caption}</p>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex shrink-0 items-center gap-2">
                 <button
                   type="button"
                   onClick={() =>
                     setActiveIndex(
-                      (activeIndex - 1 + filteredPhotos.length) % filteredPhotos.length
+                      (activeIndex - 1 + filteredPhotos.length) % filteredPhotos.length,
                     )
                   }
                   aria-label="Previous photo"
-                  className="inline-flex h-10 w-10 items-center justify-center border border-white/15 bg-[#181B20] text-[#F4F5F7] hover:border-white/30 cursor-pointer"
+                  className="inline-flex h-10 w-10 cursor-pointer items-center justify-center border border-white/15 bg-[#181B20] text-[#F4F5F7] hover:border-white/30"
                 >
                   <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                 </button>
-                <span className="px-2 font-mono text-xs text-[#A1A7B3] tabular-nums">
+                <span className="px-2 font-mono text-xs tabular-nums text-[#A1A7B3]">
                   {activeIndex + 1} / {filteredPhotos.length}
                 </span>
                 <button
                   type="button"
                   onClick={() => setActiveIndex((activeIndex + 1) % filteredPhotos.length)}
                   aria-label="Next photo"
-                  className="inline-flex h-10 w-10 items-center justify-center border border-white/15 bg-[#181B20] text-[#F4F5F7] hover:border-white/30 cursor-pointer"
+                  className="inline-flex h-10 w-10 cursor-pointer items-center justify-center border border-white/15 bg-[#181B20] text-[#F4F5F7] hover:border-white/30"
                 >
                   <ChevronRight className="h-5 w-5" aria-hidden="true" />
                 </button>

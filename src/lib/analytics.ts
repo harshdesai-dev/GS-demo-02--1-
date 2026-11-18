@@ -7,21 +7,94 @@ declare global {
   }
 }
 
+type ConsentDecision = 'granted' | 'denied';
+
+const CONSENT_STORAGE_KEY = 'forge_fitness_analytics_consent';
+const DENIED_CONSENT = {
+  analytics_storage: 'denied',
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+} as const;
+
 let isInitialized = false;
-let consentGranted = false;
+
+function readConsentDecision(): ConsentDecision | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const value = window.localStorage.getItem(CONSENT_STORAGE_KEY);
+    return value === 'granted' || value === 'denied' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistConsentDecision(decision: ConsentDecision): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(CONSENT_STORAGE_KEY, decision);
+  } catch {
+    // Consent still applies for the current page even if storage is unavailable.
+  }
+}
+
+let consentGranted = readConsentDecision() === 'granted';
+
+export function hasAnalyticsConsentDecision(): boolean {
+  return readConsentDecision() !== null;
+}
 
 export function isGa4Configured(): boolean {
   const id = SITE_CONFIG.analytics.ga4MeasurementId.trim();
-  return Boolean(id && id.startsWith('G-') && id !== SITE_CONFIG.analytics.placeholderId);
+  return /^G-[A-Z0-9]+$/.test(id) && id !== SITE_CONFIG.analytics.placeholderId;
+}
+
+function prepareGtagQueue(): void {
+  if (typeof window === 'undefined') return;
+
+  window.dataLayer = window.dataLayer || [];
+
+  if (!window.gtag) {
+    window.gtag = function gtag(...args: unknown[]) {
+      window.dataLayer?.push(args);
+    };
+
+    // Consent defaults are queued before the Google tag script is requested.
+    window.gtag('consent', 'default', {
+      ...DENIED_CONSENT,
+      wait_for_update: 500,
+    });
+  }
 }
 
 export function grantAnalyticsConsent(): void {
   consentGranted = true;
+  persistConsentDecision('granted');
+
+  if (typeof window !== 'undefined') {
+    prepareGtagQueue();
+    window.gtag?.('consent', 'update', {
+      analytics_storage: 'granted',
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+    });
+  }
+
   initializeGa4();
 }
 
 export function revokeAnalyticsConsent(): void {
   consentGranted = false;
+  persistConsentDecision('denied');
+
+  // If GA4 was already loaded, update consent immediately. The script cannot
+  // be reliably unloaded, but Google tags must stop using analytics storage.
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('consent', 'update', DENIED_CONSENT);
+  }
 }
 
 export function initializeGa4(): void {
@@ -32,18 +105,25 @@ export function initializeGa4(): void {
 
   const measurementId = SITE_CONFIG.analytics.ga4MeasurementId.trim();
 
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function gtag(...args: unknown[]) {
-    window.dataLayer?.push(args);
-  };
-
-  window.gtag('js', new Date());
-  window.gtag('config', measurementId, {
+  prepareGtagQueue();
+  if (consentGranted) {
+    window.gtag?.('consent', 'update', {
+      analytics_storage: 'granted',
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+    });
+  }
+  window.gtag?.('js', new Date());
+  window.gtag?.('config', measurementId, {
     send_page_view: false,
     anonymize_ip: true,
   });
 
-  const existingScript = document.querySelector(`script[data-ga4-id="${measurementId}"]`);
+  const existingScript = document.querySelector(
+    `script[data-ga4-id="${measurementId}"]`,
+  );
+
   if (!existingScript) {
     const script = document.createElement('script');
     script.async = true;
@@ -63,9 +143,8 @@ function trackEvent(eventName: string, params: Record<string, string | number | 
   if (typeof window === 'undefined') return;
   if (!isGa4Configured()) return;
   if (SITE_CONFIG.analytics.requireConsentBanner && !consentGranted) return;
-  if (!isInitialized) {
-    initializeGa4();
-  }
+
+  if (!isInitialized) initializeGa4();
   window.gtag?.('event', eventName, params);
 }
 
