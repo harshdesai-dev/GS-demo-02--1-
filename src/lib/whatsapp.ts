@@ -22,6 +22,10 @@ export function normalizeDigits(phone: string): string {
   return phone.replace(/\D/g, '');
 }
 
+export function isWhatsAppConfigured(): boolean {
+  return /^\d{10,15}$/.test(normalizeDigits(SITE_CONFIG.contact.whatsappNumber));
+}
+
 export function validateEnquiryForm(raw: EnquiryPayload): {
   cleaned: EnquiryPayload;
   errors: EnquiryValidationErrors;
@@ -35,37 +39,22 @@ export function validateEnquiryForm(raw: EnquiryPayload): {
   };
 
   const errors: EnquiryValidationErrors = {};
-
-  if (!cleaned.fullName) {
-    errors.fullName = 'Please enter your full name.';
-  } else if (cleaned.fullName.length < 2) {
-    errors.fullName = 'Name must be at least 2 characters.';
-  } else if (cleaned.fullName.length > 80) {
-    errors.fullName = 'Name must be 80 characters or fewer.';
-  }
+  if (!cleaned.fullName) errors.fullName = 'Please enter your full name.';
+  else if (cleaned.fullName.length < 2) errors.fullName = 'Name must be at least 2 characters.';
+  else if (cleaned.fullName.length > 80) errors.fullName = 'Name must be 80 characters or fewer.';
 
   const digits = normalizeDigits(cleaned.phone);
-  if (!cleaned.phone) {
-    errors.phone = 'Please enter your phone or WhatsApp number.';
-  } else if (!/^[+\d\s()-]+$/.test(cleaned.phone)) {
+  if (!cleaned.phone) errors.phone = 'Please enter your phone or WhatsApp number.';
+  else if (!/^[+\d\s()-]+$/.test(cleaned.phone)) {
     errors.phone = 'Phone number may only contain digits, spaces, +, -, or parentheses.';
   } else if (digits.length < 10 || digits.length > 15) {
     errors.phone = 'Please enter a valid 10 to 15 digit phone number.';
   }
 
-  if (!cleaned.interestedIn) {
-    errors.interestedIn = 'Please select what you are enquiring about.';
-  }
+  if (!cleaned.interestedIn) errors.interestedIn = 'Please select what you are enquiring about.';
+  if (cleaned.message.length > 500) errors.message = 'Message must be 500 characters or fewer.';
 
-  if (cleaned.message.length > 500) {
-    errors.message = 'Message must be 500 characters or fewer.';
-  }
-
-  return {
-    cleaned,
-    errors,
-    isValid: Object.keys(errors).length === 0,
-  };
+  return { cleaned, errors, isValid: Object.keys(errors).length === 0 };
 }
 
 export function buildWhatsAppMessage(payload: EnquiryPayload): string {
@@ -76,18 +65,16 @@ export function buildWhatsAppMessage(payload: EnquiryPayload): string {
     `Phone: ${payload.phone}`,
     `Interested in: ${payload.interestedIn}`,
   ];
-
-  if (payload.message) {
-    lines.push(`Message: ${payload.message}`);
-  }
-
+  if (payload.message) lines.push(`Message: ${payload.message}`);
   return lines.join('\n');
 }
 
 export function buildWhatsAppUrl(message: string): string {
   const targetDigits = normalizeDigits(SITE_CONFIG.contact.whatsappNumber);
-  const encodedText = encodeURIComponent(message);
-  return `https://wa.me/${targetDigits}?text=${encodedText}`;
+  if (!/^\d{10,15}$/.test(targetDigits)) {
+    throw new Error('WhatsApp contact is not configured with a verified number.');
+  }
+  return `https://wa.me/${targetDigits}?text=${encodeURIComponent(message)}`;
 }
 
 export function buildQuickWhatsAppUrl(topic?: string): string {
@@ -97,10 +84,6 @@ export function buildQuickWhatsAppUrl(topic?: string): string {
   return buildWhatsAppUrl(baseText);
 }
 
-/**
- * Triggers the WhatsApp Click-to-Chat URL synchronously inside a user-initiated
- * click/submit event using an anchor element so popup blockers do not suppress it.
- */
 export function openWhatsAppClickToChat(url: string): void {
   const anchor = document.createElement('a');
   anchor.href = url;
