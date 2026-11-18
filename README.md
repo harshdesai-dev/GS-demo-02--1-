@@ -58,6 +58,8 @@ Copy `.env.example` to `.env.local` for local configuration. In Vercel, set the 
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `VITE_WHATSAPP_NUMBER` | Yes for a real client | Confirmed WhatsApp number in international digits only, e.g. `919876543210` |
+| `VITE_PHONE_DISPLAY` | Yes for a real client | Confirmed phone number shown on the site |
+| `VITE_PHONE_HREF` | Yes for a real client | Confirmed E.164 phone link, e.g. `tel:+919876543210` |
 | `VITE_GA4_MEASUREMENT_ID` | Optional | Client-owned GA4 Measurement ID, e.g. `G-ABC123XYZ0` |
 | `VITE_SITE_URL` | Required to enable indexing | Final canonical HTTPS domain, e.g. `https://www.clientdomain.in` |
 | `VITE_INDEXING_ENABLED` | Optional; defaults to false | Set to `true` only after the client approves the domain and all public content |
@@ -68,7 +70,7 @@ Other business details are maintained in:
 
 ### WhatsApp Click-to-Chat
 
-Set `VITE_WHATSAPP_NUMBER` to the client-confirmed number. It must contain the country code and digits only, with no plus sign or spaces. The fallback number in the source configuration is a demo placeholder and must not be used for a client launch.
+Set `VITE_WHATSAPP_NUMBER` to the client-confirmed number. It must contain the country code and digits only, with no plus sign or spaces. Set `VITE_PHONE_DISPLAY` and `VITE_PHONE_HREF` to the approved phone display text and E.164 `tel:` link. The source fallbacks are demo placeholders and must not be used for a client launch. The production indexing build fails if these three client contact values are missing or invalid.
 
 The enquiry form validates input in the browser and opens WhatsApp with a prefilled message. Visitors must manually send the message in WhatsApp.
 
