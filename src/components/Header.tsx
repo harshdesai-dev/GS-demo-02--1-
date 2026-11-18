@@ -179,7 +179,7 @@ export function Header() {
                 onClick={(event) => {
                   if (!phoneEnabled) { event.preventDefault(); return; }
                   trackPhoneCtaClick('mobile_drawer');
-                }
+                }}
                 className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 border border-white/20 px-4 py-2.5 text-sm font-medium text-[#F4F5F7] hover:bg-white/5 transition-colors"
               >
                 <Phone className="h-4 w-4 text-[#C8F135]" aria-hidden="true" />
