@@ -2,97 +2,73 @@
 
 A static, conversion-focused eight-page website built for independent gyms and fitness studios using React, TypeScript, Vite, Tailwind CSS, and Lucide icons.
 
-## Scope Summary
+## Scope
 
-- **Package:** GrowthSathi Package 02 – Growth Website
-- **Architecture:** Static Single-Page Application (zero backend, zero database, zero online billing)
-- **Pages Included (8):**
-  1. Home (`/`)
-  2. About Us (`/about`)
-  3. Facilities & Services (`/facilities`)
-  4. Membership & Pricing (`/membership`)
-  5. Trainers (`/trainers`)
-  6. Class Timetable (`/timetable`)
-  7. Gallery (`/gallery`)
-  8. Contact Us (`/contact`)
-- **Enquiry Workflow:** Form validation → user-initiated `https://wa.me/` Click-to-Chat launch with URL-encoded enquiry → customer manually taps Send. No enquiry data is stored in browser storage or any server.
+- **Architecture:** Static Single-Page Application. No backend, database, online billing, booking engine, or stored enquiry records.
+- **Pages:** Home, About Us, Facilities & Services, Membership & Pricing, Trainers, Class Timetable, Gallery, and Contact Us.
+- **Enquiry workflow:** Client-side validation → user-initiated WhatsApp Click-to-Chat with a prefilled message → visitor reviews and manually taps Send.
 
----
+## Local development
 
-## Local Installation & Development
+The repository includes `bun.lock`. Use Bun to keep dependency resolution aligned with the committed lockfile:
 
 ```bash
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 The development server runs at `http://localhost:3000`.
 
-### Build & Typecheck
+## Checks and production build
 
 ```bash
-npm run lint
-npm run build
+bun run typecheck
+bun run lint
+bun run build
+bun run preview
 ```
 
-Production static assets are output to `dist/`.
+Note: `lint` currently runs the TypeScript compiler check; a separate ESLint configuration has not yet been added. Production files are generated in `dist/`.
 
----
+## Configuration
 
-## Configuration Points
+### Demo and release safety
 
-All editable business content and settings are separated from presentation code:
+The site defaults to demo mode. In demo mode, phone and WhatsApp actions are disabled and sample contact details are not used as destinations.
 
-- `src/config/siteConfig.ts` — Gym brand name, positioning, phone/WhatsApp number, address, opening hours, social links, Google Maps URLs, GA4 config, and missing client input checklist.
-- `src/data/gymContent.ts` — About copy, facilities/services, membership plans & comparison matrix, trainer profiles, static weekly timetable, and gallery photos.
+For a real client release, configure all of the following in the client-owned Vercel project:
 
-### 1. WhatsApp Click-to-Chat Configuration
+- `VITE_DEMO_MODE=false`
+- `VITE_CLIENT_CONTENT_APPROVED=true` — set this only after all names, address, prices, timetable, trainers, credentials, images, and social URLs have been checked and approved.
+- `VITE_WHATSAPP_NUMBER` — verified international digits only, 10–15 digits.
+- `VITE_PHONE_DISPLAY` — verified display phone number.
+- `VITE_PHONE_HREF` — verified `tel:+...` destination.
+- `VITE_SITE_URL` — final canonical HTTPS domain, without a trailing slash.
+- `VITE_GA4_MEASUREMENT_ID` — optional client-owned GA4 Measurement ID.
 
-Set the client-confirmed WhatsApp number in international digits-only format (no `+` or spaces, e.g. `919876543210`) using either:
+The production build fails if demo mode is disabled without the content approval flag, verified contact destinations, and canonical HTTPS domain. Do not bypass this guard to publish sample data.
 
-- Environment variable `VITE_WHATSAPP_NUMBER` in Vercel Project Settings, or
-- `SITE_CONFIG.contact.whatsappNumber` in `src/config/siteConfig.ts`.
+### Content locations
 
-### 2. Google Analytics 4 Configuration
+- `src/config/siteConfig.ts` — brand, contact, opening hours, social links, analytics, and navigation.
+- `src/data/gymContent.ts` — about copy, facilities, membership tiers, trainer profiles, timetable, and gallery content.
 
-Set the client-owned GA4 Measurement ID (e.g. `G-ABC123XYZ0`) using either:
+Replace every illustrative entry in both files before setting the content approval flag.
 
-- Environment variable `VITE_GA4_MEASUREMENT_ID` in Vercel Project Settings, or
-- `SITE_CONFIG.analytics.ga4MeasurementId` in `src/config/siteConfig.ts`.
+### Analytics consent
 
-**Privacy Rules Enforced:**
-- Analytics only initializes when a valid `G-` ID is configured and consent is granted.
-- Tracks only non-PII events: `page_view`, `whatsapp_cta_click`, `phone_cta_click`, `form_validation_error`, and `whatsapp_handoff_initiated`.
-- Customer names, phone numbers, and message text are **never** sent to GA4.
+GA4 loads only after consent is granted. The visitor's choice is persisted in local storage; a Privacy settings control remains available so the visitor can reopen preferences. Revoking consent sends a denied consent update. Customer names, phone numbers, and free-text enquiry messages must never be sent to analytics.
 
----
+## Vercel deployment
 
-## Vercel Static Deployment & Handover
+1. Use the client-owned Vercel account and approved GitHub repository.
+2. Framework preset: **Vite**.
+3. Build command: `bun run build` (or the equivalent configured package manager command).
+4. Output directory: `dist`.
+5. Add the release environment variables listed above.
+6. Attach the client's domain and verify HTTPS before handover.
+7. The build generates an absolute-URL sitemap only when `VITE_SITE_URL` is configured.
 
-1. Push this repository to the client-approved GitHub repository.
-2. Import the repository into the client-owned Vercel account:
-   - **Framework Preset:** Vite
-   - **Build Command:** `npm run build`
-   - **Output Directory:** `dist`
-3. Add environment variables in Vercel Project Settings → Environment Variables:
-   - `VITE_WHATSAPP_NUMBER`
-   - `VITE_GA4_MEASUREMENT_ID`
-4. `vercel.json` configures SPA rewrites (`/(.*) -> /index.html`) so direct visits and refreshes on all eight routes resolve cleanly.
-5. Attach the client-owned custom domain in Vercel Domains and verify HTTPS is active before final handover.
-6. Update `public/sitemap.xml` `<loc>` URLs with the final production domain prior to search console submission.
+## Commercial / operational boundary
 
----
-
-## Remaining Placeholders & Required Client Inputs Before Production
-
-Before replacing demo status and launching publicly, obtain and confirm the following from the client:
-
-1. **Brand Identity:** Confirmed gym name, tagline, and final logo SVG/PNG if applicable.
-2. **Location & Maps:** Verified street address, landmark, and exact Google Maps share/embed coordinates.
-3. **Contact Numbers:** Confirmed studio phone number (`tel:`) and official WhatsApp desk number.
-4. **Google Analytics 4:** Client-owned GA4 Measurement ID (`G-XXXXXXXXXX`).
-5. **Membership & Pricing:** Approved plan names, final INR fees, durations, GST notes, and membership terms.
-6. **Trainers:** Approved coach names, portraits, roles, and verified credentials/certifications.
-7. **Photography:** Client-supplied or approved gym interior, equipment, and training session photos.
-8. **Weekly Timetable:** Final days, timings, class titles, and assigned coaches.
-9. **Social & Domain:** Official Instagram/YouTube/Facebook URLs and custom domain DNS access.
+This package is a static marketing website with a manual WhatsApp enquiry handoff. It does not include a database, lead CRM, admin dashboard, online payments, class booking, membership management, or automated WhatsApp messaging.
