@@ -95,7 +95,7 @@ export function Footer() {
                 onClick={(event) => {
                   if (!phoneEnabled) { event.preventDefault(); return; }
                   trackPhoneCtaClick('footer');
-                }
+                }}
                 className="inline-flex min-h-[44px] items-center gap-2 text-sm font-medium text-[#F4F5F7] hover:text-[#C8F135] transition-colors"
               >
                 <Phone className="h-4 w-4 text-[#C8F135]" aria-hidden="true" />
