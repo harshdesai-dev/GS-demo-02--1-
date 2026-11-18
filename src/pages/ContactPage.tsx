@@ -87,7 +87,7 @@ export function ContactPage() {
                       onClick={(event) => {
                         if (!phoneEnabled) { event.preventDefault(); return; }
                         trackPhoneCtaClick('contact_details');
-                      }
+                      }}
                       className="inline-block font-mono text-base font-medium text-[#F4F5F7] hover:text-[#C8F135] tabular-nums"
                     >
                       {phoneEnabled ? SITE_CONFIG.contact.phoneDisplay : 'Phone details pending client approval'}
