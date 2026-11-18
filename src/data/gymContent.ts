@@ -127,7 +127,7 @@ export const FACILITIES_ITEMS: FacilityItem[] = [
     category: 'Training Zones',
     title: 'Indoor Sprint Turf & Conditioning Lane',
     summary:
-      'Dedicated high-traction turf track paired with weighted push sleds, competition kettlebells, andConcept2 rowing ergometers for metabolic work.',
+      'Dedicated high-traction turf track paired with weighted push sleds, competition kettlebells, and Concept2 rowing ergometers for metabolic work.',
     specs: ['20m Marked Sprint Lane', 'Weighted Prowler Sleds', 'Rowing Ergometers & Kettlebell Rack'],
     image: MEDIA_ASSETS.conditioningTurf,
     imageAlt: 'Indoor black sprint turf track with push sled, kettlebells, and rowing ergometers',
