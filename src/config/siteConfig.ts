@@ -15,10 +15,8 @@ export interface OpeningHour {
   hours: string;
 }
 
-const demoMode = import.meta.env.VITE_DEMO_MODE !== 'false';
-
 export const SITE_CONFIG = {
-  demoMode,
+  demoMode: import.meta.env.VITE_DEMO_MODE !== 'false',
   clientContentApproved: import.meta.env.VITE_CLIENT_CONTENT_APPROVED === 'true',
   brand: {
     name: 'Forge Fitness',
@@ -73,24 +71,9 @@ export const SITE_CONFIG = {
     { label: 'Contact', path: '/contact' },
   ] satisfies NavItem[],
   socialLinks: [
-    {
-      platform: 'Instagram',
-      handle: '@forgefitness.studio',
-      url: 'https://instagram.com',
-      isPlaceholder: true,
-    },
-    {
-      platform: 'YouTube',
-      handle: 'Forge Fitness Training',
-      url: 'https://youtube.com',
-      isPlaceholder: true,
-    },
-    {
-      platform: 'Facebook',
-      handle: 'Forge Fitness Studio',
-      url: 'https://facebook.com',
-      isPlaceholder: true,
-    },
+    { platform: 'Instagram', handle: '@forgefitness.studio', url: 'https://instagram.com', isPlaceholder: true },
+    { platform: 'YouTube', handle: 'Forge Fitness Training', url: 'https://youtube.com', isPlaceholder: true },
+    { platform: 'Facebook', handle: 'Forge Fitness Studio', url: 'https://facebook.com', isPlaceholder: true },
   ] satisfies SocialLink[],
   missingClientInputs: [
     'Confirmed Gym Brand Name, Tagline, and Vector Logo SVG/PNG',
@@ -105,10 +88,10 @@ export const SITE_CONFIG = {
   ],
 } as const;
 
-export function isLiveContactEnabled(): boolean {
-  return (
-    !SITE_CONFIG.demoMode &&
-    /^\d{10,15}$/.test(SITE_CONFIG.contact.whatsappNumber) &&
-    /^tel:\+[1-9]\d{7,14}$/.test(SITE_CONFIG.contact.phoneHref)
-  );
+export function isWhatsAppContactEnabled(): boolean {
+  return !SITE_CONFIG.demoMode && /^\d{10,15}$/.test(SITE_CONFIG.contact.whatsappNumber);
+}
+
+export function isPhoneContactEnabled(): boolean {
+  return !SITE_CONFIG.demoMode && /^tel:\+[1-9]\d{7,14}$/.test(SITE_CONFIG.contact.phoneHref);
 }
