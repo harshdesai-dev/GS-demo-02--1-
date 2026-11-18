@@ -294,7 +294,7 @@ export function EnquiryForm({
             onClick={(event) => {
               if (!phoneEnabled) { event.preventDefault(); return; }
               trackPhoneCtaClick(source);
-            }
+            }}
             className="inline-flex min-h-[44px] items-center justify-center gap-2 border border-white/20 px-4 py-2.5 text-sm font-medium text-[#F4F5F7] hover:bg-white/5 transition-colors whitespace-nowrap"
           >
             <Phone className="h-4 w-4 text-[#C8F135]" aria-hidden="true" />
@@ -337,7 +337,7 @@ export function EnquiryForm({
                   onClick={(event) => {
                     if (!phoneEnabled) { event.preventDefault(); return; }
                     trackPhoneCtaClick(`${source}_fallback`);
-                  }
+                  }}
                   className="inline-flex min-h-[40px] items-center gap-1.5 border border-white/20 px-3.5 py-2 text-xs font-medium text-[#F4F5F7] hover:bg-white/5 transition-colors"
                 >
                   <Phone className="h-3.5 w-3.5 text-[#C8F135]" aria-hidden="true" />
