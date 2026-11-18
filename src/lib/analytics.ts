@@ -55,17 +55,18 @@ function prepareGtagQueue(): void {
   if (typeof window === 'undefined') return;
 
   window.dataLayer = window.dataLayer || [];
-  window.gtag =
-    window.gtag ||
-    function gtag(...args: unknown[]) {
+
+  if (!window.gtag) {
+    window.gtag = function gtag(...args: unknown[]) {
       window.dataLayer?.push(args);
     };
 
-  // Consent defaults are queued before the Google tag script is requested.
-  window.gtag('consent', 'default', {
-    ...DENIED_CONSENT,
-    wait_for_update: 500,
-  });
+    // Consent defaults are queued before the Google tag script is requested.
+    window.gtag('consent', 'default', {
+      ...DENIED_CONSENT,
+      wait_for_update: 500,
+    });
+  }
 }
 
 export function grantAnalyticsConsent(): void {
