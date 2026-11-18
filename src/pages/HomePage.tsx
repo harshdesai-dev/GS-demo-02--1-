@@ -1,6 +1,6 @@
 import { ArrowRight, MapPin, Phone, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { SITE_CONFIG } from '../config/siteConfig';
+import { SITE_CONFIG, isPhoneContactEnabled } from '../config/siteConfig';
 import {
   ABOUT_CONTENT,
   CLASS_TIMETABLE,
@@ -20,6 +20,8 @@ import { TrainerCard } from '../components/TrainerCard';
 import { WhatsAppCta } from '../components/WhatsAppCta';
 
 export function HomePage() {
+  const phoneEnabled = isPhoneContactEnabled();
+
   usePageSeo({
     title: 'Forge Fitness – Strength, Conditioning & Coached Training',
     description:
@@ -390,12 +392,16 @@ export function HomePage() {
                 className="w-full sm:w-auto"
               />
               <a
-                href={SITE_CONFIG.contact.phoneHref}
-                onClick={() => trackPhoneCtaClick('home_bottom_cta')}
+                href={phoneEnabled ? SITE_CONFIG.contact.phoneHref : undefined}
+                aria-disabled={!phoneEnabled}
+                onClick={(event) => {
+                  if (!phoneEnabled) { event.preventDefault(); return; }
+                  trackPhoneCtaClick('home_bottom_cta');
+                }
                 className="inline-flex min-h-[44px] items-center justify-center gap-2 border border-white/20 px-4 py-2.5 text-sm font-medium text-[#F4F5F7] hover:bg-white/5 transition-colors whitespace-nowrap"
               >
                 <Phone className="h-4 w-4 text-[#C8F135]" aria-hidden="true" />
-                <span className="tabular-nums">{SITE_CONFIG.contact.phoneDisplay}</span>
+                <span className="tabular-nums">{phoneEnabled ? SITE_CONFIG.contact.phoneDisplay : 'Phone details pending'}</span>
               </a>
             </div>
           </div>
