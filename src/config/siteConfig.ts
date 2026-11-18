@@ -15,7 +15,11 @@ export interface OpeningHour {
   hours: string;
 }
 
+const demoMode = import.meta.env.VITE_DEMO_MODE !== 'false';
+
 export const SITE_CONFIG = {
+  demoMode,
+  clientContentApproved: import.meta.env.VITE_CLIENT_CONTENT_APPROVED === 'true',
   brand: {
     name: 'Forge Fitness',
     shortMark: 'FORGE',
@@ -34,12 +38,11 @@ export const SITE_CONFIG = {
     inkSecondary: '#A1A7B3',
   },
   contact: {
-    // Replace with client-confirmed WhatsApp number (international digits only, no '+' or spaces)
-    whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || '919800000000',
-    // Replace with client-confirmed display phone and tel: href
-    phoneDisplay: '+91 98000 00000',
-    phoneHref: 'tel:+919800000000',
-    emailDisplay: 'hello@forgefitness.example',
+    // Deliberately empty: never ship sample contact details as live destinations.
+    whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || '',
+    phoneDisplay: import.meta.env.VITE_PHONE_DISPLAY || '',
+    phoneHref: import.meta.env.VITE_PHONE_HREF || '',
+    emailDisplay: import.meta.env.VITE_CONTACT_EMAIL || '',
     addressLines: [
       'Sample Location: 42 Indiranagar 100 Ft Road',
       'Bengaluru, Karnataka 560038',
@@ -55,7 +58,6 @@ export const SITE_CONFIG = {
     ] satisfies OpeningHour[],
   },
   analytics: {
-    // Set VITE_GA4_MEASUREMENT_ID in Vercel environment variables or update fallback below
     ga4MeasurementId: import.meta.env.VITE_GA4_MEASUREMENT_ID || '',
     placeholderId: 'G-XXXXXXXXXX',
     requireConsentBanner: true,
@@ -102,3 +104,11 @@ export const SITE_CONFIG = {
     'Official Social Media Profile URLs and Custom Domain Name for Vercel DNS',
   ],
 } as const;
+
+export function isLiveContactEnabled(): boolean {
+  return (
+    !SITE_CONFIG.demoMode &&
+    /^\d{10,15}$/.test(SITE_CONFIG.contact.whatsappNumber) &&
+    /^tel:\+[1-9]\d{7,14}$/.test(SITE_CONFIG.contact.phoneHref)
+  );
+}
