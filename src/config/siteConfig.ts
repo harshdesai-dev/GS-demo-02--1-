@@ -16,6 +16,8 @@ export interface OpeningHour {
 }
 
 export const SITE_CONFIG = {
+  // Set this to the final HTTPS domain only after the client approves it.
+  siteUrl: import.meta.env.VITE_SITE_URL || '',
   brand: {
     name: 'Forge Fitness',
     shortMark: 'FORGE',
