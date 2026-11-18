@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { MessageSquare, Phone, CheckCircle2, AlertCircle, ArrowUpRight } from 'lucide-react';
-import { SITE_CONFIG } from '../config/siteConfig';
+import { SITE_CONFIG, isPhoneContactEnabled, isWhatsAppContactEnabled } from '../config/siteConfig';
 import { INQUIRY_INTEREST_OPTIONS } from '../data/gymContent';
 import {
   buildWhatsAppMessage,
@@ -25,6 +25,9 @@ export function EnquiryForm({
   initialInterest = '',
   source = 'enquiry_form',
 }: EnquiryFormProps) {
+  const whatsappEnabled = isWhatsAppContactEnabled();
+  const phoneEnabled = isPhoneContactEnabled();
+
   const defaultInterest =
     initialInterest &&
     (INQUIRY_INTEREST_OPTIONS as readonly string[]).includes(initialInterest)
@@ -51,7 +54,7 @@ export function EnquiryForm({
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isCooldown) return;
+    if (isCooldown || !whatsappEnabled) return;
 
     const { cleaned, errors: validationErrors, isValid } = validateEnquiryForm({
       fullName,
@@ -102,6 +105,12 @@ export function EnquiryForm({
           details prefilled so you can review and tap Send.
         </p>
       </div>
+
+      {!whatsappEnabled ? (
+        <p className="mt-5 border border-white/10 bg-[#090A0C] p-3 text-xs leading-relaxed text-[#A1A7B3]" role="note">
+          Preview mode: contact actions are disabled until the gym's verified WhatsApp and phone details are approved.
+        </p>
+      ) : null}
 
       <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-5">
         {/* Full Name */}
@@ -272,7 +281,7 @@ export function EnquiryForm({
           <ActionButton
             type="submit"
             variant="primary"
-            disabled={isCooldown}
+            disabled={isCooldown || !whatsappEnabled}
             className="w-full sm:w-auto"
           >
             <MessageSquare className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -280,12 +289,16 @@ export function EnquiryForm({
           </ActionButton>
 
           <a
-            href={SITE_CONFIG.contact.phoneHref}
-            onClick={() => trackPhoneCtaClick(source)}
+            href={phoneEnabled ? SITE_CONFIG.contact.phoneHref : undefined}
+            aria-disabled={!phoneEnabled}
+            onClick={(event) => {
+              if (!phoneEnabled) { event.preventDefault(); return; }
+              trackPhoneCtaClick(source);
+            }
             className="inline-flex min-h-[44px] items-center justify-center gap-2 border border-white/20 px-4 py-2.5 text-sm font-medium text-[#F4F5F7] hover:bg-white/5 transition-colors whitespace-nowrap"
           >
             <Phone className="h-4 w-4 text-[#C8F135]" aria-hidden="true" />
-            <span>Or Call Studio</span>
+            <span>{phoneEnabled ? 'Or Call Studio' : 'Phone details pending'}</span>
           </a>
         </div>
 
@@ -319,12 +332,16 @@ export function EnquiryForm({
                   <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
                 </a>
                 <a
-                  href={SITE_CONFIG.contact.phoneHref}
-                  onClick={() => trackPhoneCtaClick(`${source}_fallback`)}
+                  href={phoneEnabled ? SITE_CONFIG.contact.phoneHref : undefined}
+                  aria-disabled={!phoneEnabled}
+                  onClick={(event) => {
+                    if (!phoneEnabled) { event.preventDefault(); return; }
+                    trackPhoneCtaClick(`${source}_fallback`);
+                  }
                   className="inline-flex min-h-[40px] items-center gap-1.5 border border-white/20 px-3.5 py-2 text-xs font-medium text-[#F4F5F7] hover:bg-white/5 transition-colors"
                 >
                   <Phone className="h-3.5 w-3.5 text-[#C8F135]" aria-hidden="true" />
-                  <span>Call {SITE_CONFIG.contact.phoneDisplay}</span>
+                  <span>{phoneEnabled ? `Call ${SITE_CONFIG.contact.phoneDisplay}` : 'Phone details pending'}</span>
                 </a>
               </div>
             </div>
