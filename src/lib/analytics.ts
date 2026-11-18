@@ -105,6 +105,14 @@ export function initializeGa4(): void {
   const measurementId = SITE_CONFIG.analytics.ga4MeasurementId.trim();
 
   prepareGtagQueue();
+  if (consentGranted) {
+    window.gtag?.('consent', 'update', {
+      analytics_storage: 'granted',
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+    });
+  }
   window.gtag?.('js', new Date());
   window.gtag?.('config', measurementId, {
     send_page_view: false,
