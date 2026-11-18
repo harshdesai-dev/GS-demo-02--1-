@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { Phone, MapPin, Clock, ArrowUpRight } from 'lucide-react';
-import { SITE_CONFIG } from '../config/siteConfig';
+import { SITE_CONFIG, isPhoneContactEnabled } from '../config/siteConfig';
 import { WhatsAppCta } from './WhatsAppCta';
 import { trackPhoneCtaClick } from '../lib/analytics';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const phoneEnabled = isPhoneContactEnabled();
 
   return (
     <footer className="border-t border-white/10 bg-[#090A0C] text-[#A1A7B3]">
@@ -89,19 +90,24 @@ export function Footer() {
             <div className="flex flex-col gap-3">
               <WhatsAppCta source="footer" label="WhatsApp Desk" className="w-full sm:w-auto" />
               <a
-                href={SITE_CONFIG.contact.phoneHref}
-                onClick={() => trackPhoneCtaClick('footer')}
+                href={phoneEnabled ? SITE_CONFIG.contact.phoneHref : undefined}
+                aria-disabled={!phoneEnabled}
+                onClick={(event) => {
+                  if (!phoneEnabled) { event.preventDefault(); return; }
+                  trackPhoneCtaClick('footer');
+                }
                 className="inline-flex min-h-[44px] items-center gap-2 text-sm font-medium text-[#F4F5F7] hover:text-[#C8F135] transition-colors"
               >
                 <Phone className="h-4 w-4 text-[#C8F135]" aria-hidden="true" />
-                <span className="tabular-nums">{SITE_CONFIG.contact.phoneDisplay}</span>
+                <span className="tabular-nums">{phoneEnabled ? SITE_CONFIG.contact.phoneDisplay : 'Phone details pending'}</span>
               </a>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-xs">
               {SITE_CONFIG.socialLinks.map((social) => (
                 <a
                   key={social.platform}
-                  href={social.url}
+                  href={social.isPlaceholder ? undefined : social.url}
+                  aria-disabled={social.isPlaceholder}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[#A1A7B3] hover:text-[#F4F5F7] transition-colors"
